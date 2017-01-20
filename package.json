@@ -14,5 +14,8 @@
     "API"
   ],
   "author": "wwmin",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.14.0"
+  }
 }
