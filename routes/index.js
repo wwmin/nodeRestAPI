@@ -1,7 +1,16 @@
-var express = require('express');
-var router = express.Router();
+module.exports = function (app) {
+  app.get('/', function (req, res) {
+    res.send('/posts');
+  });
+  app.use('/signup', require('./signup'));
+  app.use('/signin', require('./signin'));
+  app.use('/signout', require('./signout'));
+  app.use('/posts', require('./posts'));
 
-router.get('/', function (req, res) {
-  res.send('hello,express');
-});
-module.exports = router;
+  // 404 page
+  app.use(function (req, res) {
+    if (!res.headersSent) {
+      res.send('404');
+    }
+  });
+};
