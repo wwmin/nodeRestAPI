@@ -28,7 +28,7 @@ app.use(require('express-formidable')({
   keepExtensions: true //保留后缀
 }));
 
-// 正常请求的日志
+// 正常请求的日志  为什么log路径不正确
 app.use(expressWinston.logger({
   transports: [
     new (winston.transports.Console)({
@@ -54,7 +54,13 @@ app.use(expressWinston.errorLogger({
     })
   ]
 }));
-// 监听端口，启动程序
-app.listen(config.port, function () {
-  console.log(`${pkg.name} listening on port ${config.port}`);
-});
+//直接启动 index.js 则会监听端口启动程序，如果 index.js 被 require 了，则导出 app，通常用于测试。
+if (module.parent) {
+  //用于测试 输出app实例
+  module.exports = app;
+} else {
+  // 监听端口，启动程序
+  app.listen(config.port, function () {
+    console.log(`${pkg.name} listening on port: ${config.port}`);
+  });
+}
