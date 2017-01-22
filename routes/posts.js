@@ -2,35 +2,33 @@ var express = require('express');
 var router = express.Router();
 
 var PostModel = require('../models/posts');
+var CommentModel = require('../models/comments');
 var checkLogin = require('../middlewares/check').checkLogin;
 
 // GET /posts 所有用户或者特定用户的文章页
 //   eg: GET /posts?author=xxx
-router.get('/', function (req, res, next) {
+router.get('/', checkLogin, function (req, res, next) {
   var author = req.query.author;
-
+  // var author=req.session.user.name; //可查询登录的用户信息
   PostModel.getPosts(author)
     .then(function (posts) {
-      res.set('Content-Type', 'text/plain');
-      res.send('posts', {
-        posts: posts
+      res.type('json');
+      res.status(200);
+      res.send({
+        "posts": posts
       });
-      // next();
-    })
-    .then(function (e) {
-      res.send("没找到");
     })
     .catch(next);
 });
 
 // GET /posts/create 发表文章页
 router.get('/create', checkLogin, function (req, res, next) {
-  res.render('create');
+  res.end('create 请用POST');
 });
 
 // POST /posts 发表一篇文章
 router.post('/', checkLogin, function (req, res, next) {
-  var author = req.session.user._id;
+  var author = req.session.user.name;
   var title = req.fields.title;
   var content = req.fields.content;
 
@@ -43,7 +41,7 @@ router.post('/', checkLogin, function (req, res, next) {
       throw new Error('请填写内容');
     }
   } catch (e) {
-    return req.send('error', e.message);
+    res.status(500).send('error').end();
     // return res.redirect('back');
   }
 
@@ -57,12 +55,9 @@ router.post('/', checkLogin, function (req, res, next) {
   PostModel.create(post)
     .then(function (result) {
       // 此 post 是插入 mongodb 后的值，包含 _id
-      // post = result.ops[0];
+      post = result.ops[0];
       res.set('Content-Type', 'text/plain');
       res.status(200).end('发表成功');
-      // return res.send('success', '发表成功');
-      // 发表成功后跳转到该文章页
-      // res.redirect(`/posts/${post._id}`);
     })
     .catch(next);
 });
@@ -73,79 +68,133 @@ router.get('/:postId', function (req, res, next) {
 
   Promise.all([
     PostModel.getPostById(postId),// 获取文章信息
+    CommentModel.getCommentsCount(postId),//获取该文章所有留言
     PostModel.incPv(postId)// pv 加 1
   ])
     .then(function (result) {
       var post = result[0];
+      var comments = result[1];
       if (!post) {
-        throw new Error('该文章不存在');
+        res.type('text');
+        res.status(500);
+        res.send('该文章不存在');
+        return;
       }
-
-      res.send('post', {
-        post: post
+      res.type('json');
+      res.status(200);
+      res.send({
+        post: post,
+        comments: comments
       });
     })
     .catch(next);
 });
 
-// GET /posts/:postId/edit 更新文章页
-router.get('/:postId/edit', checkLogin, function (req, res, next) {
+// GET /posts/edit/:postId 根据id获取文章
+router.get('/edit/:postId', checkLogin, function (req, res, next) {
   var postId = req.params.postId;
-  var author = req.session.user._id;
-
+  var author = req.session.user.name;
   PostModel.getRawPostById(postId)
     .then(function (post) {
       if (!post) {
-        throw new Error('该文章不存在');
+        res.end('该文章不存在');
+        return;
       }
-      if (author.toString() !== post.author._id.toString()) {
-        throw new Error('权限不足');
+      if (author !== post.author) {
+        res.end('权限不足');
+        return;
       }
-      res.send('edit', {
-        post: post
-      });
+      CommentModel.getComments(postId).then(function (comments) {
+        res.type('json');
+        res.status(200);
+        res.send({
+          post: post,
+          comments: comments
+        });
+      }).catch(next)
     })
     .catch(next);
 });
 
-// POST /posts/:postId/edit 更新一篇文章
-router.post('/:postId/edit', checkLogin, function (req, res, next) {
+// POST /posts/edit/:postId 更新一篇文章
+router.post('/edit/:postId', checkLogin, function (req, res, next) {
   var postId = req.params.postId;
-  var author = req.session.user._id;
+  var author = req.session.user.name;
   var title = req.fields.title;
   var content = req.fields.content;
-
+  if (!postId || !author || !title || !content) {
+    res.end("id or author or title or content ERROR");
+    return;
+  }
   PostModel.updatePostById(postId, author, {title: title, content: content})
     .then(function () {
-      return req.send('success', '编辑文章成功');
-      // 编辑成功后跳转到上一页
-      // res.redirect(`/posts/${postId}`);
+      res.type('text');
+      res.status(200);
+      res.send('编辑文章成功');
     })
     .catch(next);
 });
 
-// GET /posts/:postId/remove 删除一篇文章
-router.get('/:postId/remove', checkLogin, function (req, res, next) {
+// GET /posts/remove/:postId 删除一篇文章
+router.get('/remove/:postId', checkLogin, function (req, res, next) {
   var postId = req.params.postId;
+  var author = req.session.user.name;
+  PostModel.getRawPostById(postId)
+    .then(function (post) {
+      if (!post) {
+        res.end('该文章不存在');
+        return;
+      }
+      if (author !== post.author) {
+        res.end('权限不足');
+        return;
+      }
+      //符合条件,可以删除
+      PostModel.delPostById(postId, author)
+        .then(function () {
+          res.type('text');
+          res.status(200);
+          res.send('删除文章成功').end();
+        })
+        .catch(next);
+    }).catch(next);
+
+});
+
+// POST /posts/comment/:postId创建一条留言
+router.post('/comment/:postId', checkLogin, function (req, res, next) {
+  var author = req.session.user.name;
+  var postId = req.params.postId;
+  var content = req.fields.content;
+  PostModel.getRawPostById(postId)
+    .then(function (post) {
+      if (!post) {
+        res.end('该文章不存在');
+        return;
+      }
+      var comment = {
+        author: author,
+        postId: postId,
+        content: content
+      };
+      CommentModel.create(comment)
+        .then(function () {
+          res.send("留言成功");
+        })
+        .catch(next)
+    }).catch(next);
+
+});
+
+// GET /posts/comment/:postId/remove/:commentId 删除一条留言
+router.get('/comment/:postId/remove/:commentId', checkLogin, function (req, res, next) {
+  var commentId = req.params.commentId;
   var author = req.session.user._id;
 
-  PostModel.delPostById(postId, author)
+  CommentModel.delCommentById(commentId, author)
     .then(function () {
-      return req.send('success', '删除文章成功');
-      // 删除成功后跳转到主页
-      // res.redirect('/posts');
+      res.end('删除留言成功');
     })
-    .catch(next);
-});
-
-// POST /posts/:postId/comment 创建一条留言
-router.post('/:postId/comment', checkLogin, function (req, res, next) {
-  res.send("data");
-});
-
-// GET /posts/:postId/comment/:commentId/remove 删除一条留言
-router.get('/:postId/comment/:commentId/remove', checkLogin, function (req, res, next) {
-  res.send("data");
 });
 
 module.exports = router;
