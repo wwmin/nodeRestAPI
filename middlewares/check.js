@@ -4,6 +4,7 @@ module.exports = {
       res.set('Content-Type', 'text/plain');
       res.end('checkLogin - 未登录');
       // return res.redirect('/signin');
+      return;
     }
     next();
   },
@@ -12,7 +13,9 @@ module.exports = {
       // res.set('Content-Type', 'text/plain');
       // res.end('checkNotLogin - 已登录');
       // return res.redirect('back');
-      res.send('已登录');
+      res.set('Content-Type', 'text/plain');
+      res.end('已登录');
+      return;
     }
     next();
   }
