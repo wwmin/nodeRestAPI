@@ -4,6 +4,8 @@ var bodyParser = require('body-parser');
 var session = require('express-session');
 var MongoStore = require('connect-mongo')(session);
 var config = require('config-lite');
+var winston = require('winston');
+var expressWinston = require('express-winston');
 var routes = require('./routes/index');
 var pkg = require('./package');
 
@@ -25,8 +27,33 @@ app.use(require('express-formidable')({
   uploadDir: path.join(__dirname, 'public/img'),//上传文件目录
   keepExtensions: true //保留后缀
 }));
+
+// 正常请求的日志
+app.use(expressWinston.logger({
+  transports: [
+    new (winston.transports.Console)({
+      json: true,
+      colorize: true
+    }),
+    new winston.transports.File({
+      filename: '../logs/success.log'
+    })
+  ]
+}));
 //路由
 routes(app);
+// 错误请求的日志
+app.use(expressWinston.errorLogger({
+  transports: [
+    new winston.transports.Console({
+      json: true,
+      colorize: true
+    }),
+    new winston.transports.File({
+      filename: '../logs/error.log'
+    })
+  ]
+}));
 // 监听端口，启动程序
 app.listen(config.port, function () {
   console.log(`${pkg.name} listening on port ${config.port}`);
