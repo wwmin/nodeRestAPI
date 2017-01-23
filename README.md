@@ -1,5 +1,7 @@
 # node rest API 练习
 :date:: 2017/01/20
+[![Build Status](https://travis-ci.org/wwmin/nodeRestAPI.svg?branch=master)]()
+[![npm version](https://badge.fury.io/gh/wwmin%2FnodeRestAPI.svg)](http://badge.fury.io/js/faker)
 ### express 框架
 
 #### 安装依赖
