@@ -21,32 +21,41 @@ router.post('/', checkNotLogin, function (req, res, next) {
   var password = req.fields.password;
   var repassword = req.fields.repassword;
 
+  var errorMsg = '';
   // 校验参数
   try {
     if (!(name.length >= 1 && name.length <= 10)) {
-      throw new Error('名字请限制在 1-10 个字符');
+      errorMsg = '名字请限制在 1-10 个字符';
+      throw new Error(errorMsg);
     }
     if (['m', 'f', 'x'].indexOf(gender) === -1) {
-      throw new Error('性别只能是 m、f 或 x');
+      errorMsg = '性别只能是 m、f 或 x';
+      throw new Error(errorMsg);
     }
     if (!(bio.length >= 1 && bio.length <= 30)) {
-      throw new Error('个人简介请限制在 1-30 个字符');
+      errorMsg = '个人简介请限制在 1-30 个字符';
+      throw new Error(errorMsg);
     }
     if (!req.files.avatar.name) {
-      throw new Error('缺少头像');
+      errorMsg = '缺少头像';
+      throw new Error(errorMsg);
     }
     if (password.length < 6) {
-      throw new Error('密码至少 6 个字符');
+      errorMsg = '密码至少 6 个字符';
+      throw new Error(errorMsg);
     }
     if (password !== repassword) {
-      throw new Error('两次输入密码不一致');
+      errorMsg = '两次输入密码不一致';
+      throw new Error(errorMsg);
     }
   } catch (e) {
     // 注册失败，异步删除上传的头像
-    fs.unlink(req.files.avatar.path);
+    // fs.unlink(req.files.avatar.path);
     res.type('text');
     res.status(500);
-    res.end('注册失败');
+    res.end(`注册失败：${errorMsg}`);
+    // res.send(500,'注册失败')
+    return;
   }
 
   // 明文密码加密
@@ -69,6 +78,7 @@ router.post('/', checkNotLogin, function (req, res, next) {
       delete user.password;
       req.session.user = user;
       // 跳转到首页
+      res.status(200).type('text');
       res.end('注册成功');
     })
     .catch(function (e) {
@@ -76,7 +86,9 @@ router.post('/', checkNotLogin, function (req, res, next) {
       fs.unlink(req.files.avatar.path);
       // 用户名被占用则跳回注册页，而不是错误页
       if (e.message.match('E11000 duplicate key')) {
+        res.status(500).type('text');
         res.end('用户名已被占用');
+        return;
       }
       next(e);
     });
