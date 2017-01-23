@@ -28,7 +28,7 @@ app.use(require('express-formidable')({
   keepExtensions: true //保留后缀
 }));
 
-// 正常请求的日志  为什么log路径不正确
+/*// 正常请求的日志  为什么log路径不正确
 app.use(expressWinston.logger({
   transports: [
     new (winston.transports.Console)({
@@ -36,13 +36,13 @@ app.use(expressWinston.logger({
       colorize: true
     }),
     new winston.transports.File({
-      filename: '../logs/success.log'
+      filename: 'logs/success.log'
     })
   ]
-}));
+}));*/
 //路由
 routes(app);
-// 错误请求的日志
+/*// 错误请求的日志
 app.use(expressWinston.errorLogger({
   transports: [
     new winston.transports.Console({
@@ -50,10 +50,10 @@ app.use(expressWinston.errorLogger({
       colorize: true
     }),
     new winston.transports.File({
-      filename: '../logs/error.log'
+      filename: 'logs/error.log'
     })
   ]
-}));
+}));*/
 //直接启动 index.js 则会监听端口启动程序，如果 index.js 被 require 了，则导出 app，通常用于测试。
 if (module.parent) {
   //用于测试 输出app实例

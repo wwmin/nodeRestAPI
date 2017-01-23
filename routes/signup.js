@@ -44,7 +44,9 @@ router.post('/', checkNotLogin, function (req, res, next) {
   } catch (e) {
     // 注册失败，异步删除上传的头像
     fs.unlink(req.files.avatar.path);
-    return res.end('注册失败');
+    res.type('text');
+    res.status(500);
+    res.end('注册失败');
   }
 
   // 明文密码加密
