@@ -9,7 +9,7 @@ var checkNotLogin = require('../middlewares/check').checkNotLogin;
 
 // GET /signup 注册页
 router.get('/', checkNotLogin, function (req, res, next) {
-  res.end('signup 请用post');
+  res.end('signup请用post');
 });
 
 // POST /signup 用户注册
@@ -17,10 +17,10 @@ router.post('/', checkNotLogin, function (req, res, next) {
   var name = req.fields.name;
   var gender = req.fields.gender;
   var bio = req.fields.bio;
-  var avatar = req.files.avatar.path.split(path.sep).pop();
+  // var avatar = req.files.avatar.path.split(path.sep).pop();
+  var files = req.files;
   var password = req.fields.password;
   var repassword = req.fields.repassword;
-
   var errorMsg = '';
   // 校验参数
   try {
@@ -36,7 +36,7 @@ router.post('/', checkNotLogin, function (req, res, next) {
       errorMsg = '个人简介请限制在 1-30 个字符';
       throw new Error(errorMsg);
     }
-    if (!req.files.avatar.name) {
+    if (!files.avatar || !files.avatar.name) {
       errorMsg = '缺少头像';
       throw new Error(errorMsg);
     }
@@ -57,7 +57,8 @@ router.post('/', checkNotLogin, function (req, res, next) {
     // res.send(500,'注册失败')
     return;
   }
-
+  //头像路径
+  var avatar = req.files.avatar.path.split(path.sep).pop();
   // 明文密码加密
   password = sha1(password);
 
@@ -86,11 +87,12 @@ router.post('/', checkNotLogin, function (req, res, next) {
       fs.unlink(req.files.avatar.path);
       // 用户名被占用则跳回注册页，而不是错误页
       if (e.message.match('E11000 duplicate key')) {
+        console.log('用户名已被占用');
         res.status(500).type('text');
         res.end('用户名已被占用');
-        return;
+        // return;
       }
-      next(e);
+      // next(e);
     });
 });
 

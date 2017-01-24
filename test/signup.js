@@ -5,10 +5,20 @@ var app = require('../index');
 var User = require('../lib/mongo').User;
 
 var testName1 = 'testName1';
-var testName2 = 'nswbmw';
+var testName2 = 'testName2';
 describe('signup', function () {
+  var agent = request.agent(app);//persist cookie when redirect
+  describe('GET /signup', function () {
+    it('signup 用 post', function (done) {
+      agent.get('/signup')
+        .end(function (err, res) {
+          if (err)return done(err);
+          assert(res.text.match(/signup请用post/));
+          done();
+        })
+    })
+  });
   describe('POST /signup', function () {
-    var agent = request.agent(app);//persist cookie when redirect
     beforeEach(function (done) {
       // 创建一个用户
       User.create({
@@ -41,10 +51,10 @@ describe('signup', function () {
         .post('/signup')
         .type('form')
         .attach('avatar', path.join(__dirname, 'avatar.png'))
-        .field({ name: '' })
-        .end(function(err, res) {
+        .field({name: ''})
+        .end(function (err, res) {
           if (err) return done(err);
-          assert(res.text.match(/名字请限制在 1-10 个字符/));
+          assert.ok(res.text.match(/名字请限制在 1-10 个字符/));
           done();
         });
     });
@@ -61,9 +71,57 @@ describe('signup', function () {
           done();
         });
     });
-    // 其余的参数测试自行补充
+    // 个人简介
+    it('个人简介字符限制', function (done) {
+      agent
+        .post('/signup')
+        .type('form')
+        .attach('avatar', path.join(__dirname, 'avatar.png'))
+        .field({name: testName1, gender: 'm', bio: ''})
+        .end(function (err, res) {
+          if (err)return done(err);
+          assert(res.text.match(/个人简介请限制在 1-30 个字符/));
+          done();
+        })
+    });
+    //缺少头像
+    it('缺少头像', function (done) {
+      agent
+        .post('/signup')
+        .type('form')
+        .field({name: testName1, gender: 'm', bio: "简介"})
+        .end(function (err, res) {
+          if (err)return done(err);
+          assert(res.text.match(/缺少头像/));
+          done()
+        })
+    });
+    //密码长度错误
+    it('密码错误', function (done) {
+      agent.post('/signup')
+        .type('form')
+        .attach('avatar', path.join(__dirname, 'avatar.png'))
+        .field({name: testName1, gender: 'm', bio: "bio", password: "12345"})
+        .end(function (err, res) {
+          if (err)return done(err);
+          assert(res.text.match(/密码至少 6 个字符/));
+          done()
+        })
+    });
+    //两次输入密码不一致
+    it('两次输入密码不一致', function (done) {
+      agent.post('/signup')
+        .type('form')
+        .attach('avatar', path.join(__dirname, 'avatar.png'))
+        .field({name: testName1, gender: 'm', bio: "bio", password: "123456", repassword: "1234566"})
+        .end(function (err, res) {
+          if (err)return done(err);
+          assert(res.text.match(/两次输入密码不一致/));
+          done()
+        })
+    });
     // 用户名被占用的情况
-    it('duplicate name', function (done) {
+    it('用户名被占用', function (done) {
       agent
         .post('/signup')
         .type('form')
@@ -77,7 +135,7 @@ describe('signup', function () {
     });
 
     // 注册成功的情况
-    it('success', function (done) {
+    it('注册成功', function (done) {
       agent
         .post('/signup')
         .type('form')

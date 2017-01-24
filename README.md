@@ -2,8 +2,21 @@
 :date:: 2017/01/20
 
 [![Build Status](https://travis-ci.org/wwmin/nodeRestAPI.svg?branch=master)](https://travis-ci.org/wwmin/nodeRestAPI)
-[![npm version](https://badge.fury.io/js/faker.svg)](http://badge.fury.io/js/faker)
-[![npm version](https://badge.fury.io/gh/wwmin%2FnodeRestAPI.svg)](http://badge.fury.io/js/faker)
+[![version](https://badge.fury.io/gh/wwmin%2FnodeRestAPI.svg)](http://badge.fury.io/js/faker)
+[![Test coverage](https://img.shields.io/coveralls/wwmin/nodeRestAPI.svg?style=flat-square)](https://coveralls.io/r/wwmin/nodeRestAPI?branch=master)
+[![David deps][david-image]][david-url]
+[![node version][node-image]][node-url]
+[![npm download][download-image]][download-url]
+[![npm license][license-image]][download-url]
+
+[david-image]: https://img.shields.io/david/wwmin/nodeRestAPI.svg?style=flat-square
+[david-url]: https://david-dm.org/wwmin/nodeRestAPI
+[node-image]: https://img.shields.io/badge/node.js-%3E=_4.0-green.svg?style=flat-square
+[node-url]: http://nodejs.org/download/
+[download-image]: https://img.shields.io/npm/dm/nra.svg?style=flat-square
+[download-url]:https://github.com/wwmin/nodeRestAPI.git
+[license-image]: https://img.shields.io/npm/l/vue.svg
+
 
 访问地址：https://github.com/wwmin/nodeRestAPI
 
@@ -49,4 +62,4 @@
 
 [MIT](http://opensource.org/licenses/MIT)
 
-Copyright (c) 2016-2017 wwmin
+Copyright (c) 2017 wwmin

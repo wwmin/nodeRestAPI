@@ -20,14 +20,14 @@ router.post('/', checkNotLogin, function (req, res, next) {
   UserModel.getUserByName(name)
     .then(function (user) {
       if (!user) {
-        res.set('Content-Type', 'text/plain');
+        res.type('text');
         res.status(500);
         res.end('用户不存在');
         return;
       }
       // 检查密码是否匹配
       if (sha1(password) !== user.password) {
-        res.set('Content-Type', 'text/plain');
+        res.type('text');
         res.status(500);
         res.end('用户名或密码错误');
         return;
@@ -36,7 +36,7 @@ router.post('/', checkNotLogin, function (req, res, next) {
       delete user.password;
       req.session.user = user;
       // 跳转到主页
-      res.set('Content-Type', 'text/plain');
+      res.type('text');
       res.status(200);
       res.end('登录成功');
     })
