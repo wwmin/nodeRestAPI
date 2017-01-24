@@ -35,20 +35,19 @@ describe('signup', function () {
         .catch(done);
     });
 
-    // 名户名错误的情况
-    // it('wrong name', function(done) {
-    //   agent
-    //     .post('/signup')
-    //     .type('form')
-    //     .attach('avatar', path.join(__dirname, 'avatar.png'))
-    //     .field({ name: '' })
-    //     .end(function(err, res) {
-    //       if (err) return done(err);
-    //       assert(res.text.match(/名字请限制在 1-10 个字符/));
-    //       done();
-    //     });
-    // });
-
+    //用户名错误的情况
+    it('wrong name', function (done) {
+      agent
+        .post('/signup')
+        .type('form')
+        .attach('avatar', path.join(__dirname, 'avatar.png'))
+        .field({ name: '' })
+        .end(function(err, res) {
+          if (err) return done(err);
+          assert(res.text.match(/名字请限制在 1-10 个字符/));
+          done();
+        });
+    });
     // 性别错误的情况
     it('wrong gender', function (done) {
       agent
@@ -56,7 +55,6 @@ describe('signup', function () {
         .type('form')
         .attach('avatar', path.join(__dirname, 'avatar.png'))
         .field({name: testName2, gender: 'a'})
-        .redirects()
         .end(function (err, res) {
           if (err) return done(err);
           assert(res.text.match(/性别只能是 m、f 或 x/));
@@ -71,7 +69,6 @@ describe('signup', function () {
         .type('form')
         .attach('avatar', path.join(__dirname, 'avatar.png'))
         .field({name: testName1, gender: 'm', bio: 'noder', password: '123456', repassword: '123456'})
-        .redirects()
         .end(function (err, res) {
           if (err) return done(err);
           assert(res.text.match(/用户名已被占用/));
@@ -86,7 +83,6 @@ describe('signup', function () {
         .type('form')
         .attach('avatar', path.join(__dirname, 'avatar.png'))
         .field({name: testName2, gender: 'm', bio: 'noder', password: '123456', repassword: '123456'})
-        .redirects()
         .end(function (err, res) {
           if (err) return done(err);
           assert(res.text.match(/注册成功/));
