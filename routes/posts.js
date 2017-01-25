@@ -5,7 +5,7 @@ var PostModel = require('../models/posts');
 var CommentModel = require('../models/comments');
 var checkLogin = require('../middlewares/check').checkLogin;
 
-// GET /posts 所有用户或者特定用户的文章页
+// GET /posts 所有用户或者特定用户的文章
 //   eg: GET /posts?author=xxx
 router.get('/', checkLogin, function (req, res, next) {
   var author = req.query.author;
@@ -14,16 +14,11 @@ router.get('/', checkLogin, function (req, res, next) {
     .then(function (posts) {
       res.type('json');
       res.status(200);
-      res.send({
+      res.end({
         "posts": posts
       });
     })
     .catch(next);
-});
-
-// GET /posts/create 发表文章页
-router.get('/create', checkLogin, function (req, res, next) {
-  res.end('create 请用POST');
 });
 
 // POST /posts 发表一篇文章
@@ -32,17 +27,20 @@ router.post('/', checkLogin, function (req, res, next) {
   var title = req.fields.title;
   var content = req.fields.content;
 
+  var errorMsg = '';
   // 校验参数
   try {
     if (!title.length) {
-      throw new Error('请填写标题');
+      errorMsg = '请填写标题';
+      throw new Error(errorMsg);
     }
     if (!content.length) {
-      throw new Error('请填写内容');
+      errorMsg = '请填写内容';
+      throw new Error(errorMsg);
     }
   } catch (e) {
-    res.status(500).send('error').end();
-    // return res.redirect('back');
+    res.status(500).type('text').end(errorMsg);
+    return;
   }
 
   var post = {
@@ -56,8 +54,7 @@ router.post('/', checkLogin, function (req, res, next) {
     .then(function (result) {
       // 此 post 是插入 mongodb 后的值，包含 _id
       post = result.ops[0];
-      res.set('Content-Type', 'text/plain');
-      res.status(200).end('发表成功');
+      res.status(200).json(post);
     })
     .catch(next);
 });

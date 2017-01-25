@@ -9,7 +9,7 @@ var checkNotLogin = require('../middlewares/check').checkNotLogin;
 
 // GET /signin 登录页
 router.get('/', checkNotLogin, function (req, res, next) {
-  res.send('signin 需要用post方法');
+  res.status(200).end('signin 需要用post方法');
 });
 
 // POST /signin 用户登录
