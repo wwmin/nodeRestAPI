@@ -14,7 +14,7 @@ router.get('/', checkLogin, function (req, res, next) {
     .then(function (posts) {
       res.type('json');
       res.status(200);
-      res.end({
+      res.send({
         "posts": posts
       });
     })
